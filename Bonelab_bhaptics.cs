@@ -198,6 +198,7 @@ namespace Bonelab_bhaptics
             [HarmonyPostfix]
             public static void Postfix(SLZ.Interaction.InventorySlotReceiver __instance, SLZ.Interaction.IGrippable host)
             {
+                if (__instance == null) return;
                 if (__instance.isInUIMode) return;
                 if (host == null) return;
                 SLZ.Interaction.Hand hand = host.GetLastHand();
