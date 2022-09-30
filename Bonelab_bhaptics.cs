@@ -164,22 +164,22 @@ namespace Bonelab_bhaptics
 
                 var angleShift = getAngleAndShift(__instance.transform, attack.collider.transform.position);
                 tactsuitVr.PlayBackHit(damagePattern, angleShift.Key, angleShift.Value);
-                //tactsuitVr.LOG("Attack: " + __instance.health.curr_Health.ToString() + " " + attack.damage.ToString());
-                //__instance.health.TAKEDAMAGE(attack.damage);
-                /*
-                if (__instance.health.curr_Health - attack.damage >= __instance.health.max_Health) __instance.health.curr_Health = __instance.health.max_Health;
-                else if (__instance.health.curr_Health - attack.damage <= 0.0f)
-                {
-                    __instance.health.TAKEDAMAGE(attack.damage);
-                    return;
-                }
-                else __instance.health.curr_Health -= attack.damage;
-                */
+                __instance.health.TAKEDAMAGE(attack.damage);
             }
         }
-        
 
-
+        /*
+        [HarmonyPatch(typeof(SLZ.Interaction.InventorySlot), "Insert", new Type[] { typeof(GameObject) })]
+        public class bhaptics_SlotInsert
+        {
+            [HarmonyPostfix]
+            public static void Postfix(SLZ.Interaction.InventorySlot __instance)
+            {
+                tactsuitVr.LOG("Insert: " + __instance.name);
+                tactsuitVr.PlaybackHaptics("StoreShotgun_R");
+            }
+        }
+        */
         [HarmonyPatch(typeof(Player_Health), "Death", new Type[] {  })]
         public class bhaptics_PlayerDeath
         {
