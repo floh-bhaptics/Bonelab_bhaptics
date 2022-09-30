@@ -12,6 +12,9 @@ namespace MyBhapticsTactsuit
     {
         public bool suitDisabled = true;
         public bool systemInitialized = false;
+
+        public bool faceConnected = false;
+        public bool armsConnected = false;
         private static ManualResetEvent HeartBeat_mrse = new ManualResetEvent(false);
         private static ManualResetEvent Water_mrse = new ManualResetEvent(false);
         private static ManualResetEvent Choking_mrse = new ManualResetEvent(false);
@@ -29,26 +32,6 @@ namespace MyBhapticsTactsuit
             }
         }
 
-        public void WaterFunc()
-        {
-            while (true)
-            {
-                Water_mrse.WaitOne();
-                bHaptics.SubmitRegistered("WaterSlushing");
-                Thread.Sleep(5050);
-            }
-        }
-
-        public void ChokingFunc()
-        {
-            while (true)
-            {
-                Choking_mrse.WaitOne();
-                bHaptics.SubmitRegistered("Choking");
-                Thread.Sleep(1050);
-            }
-        }
-
         public TactsuitVR()
         {
             LOG("Initializing suit");
@@ -57,13 +40,12 @@ namespace MyBhapticsTactsuit
                 suitDisabled = false;
             }
             RegisterAllTactFiles();
-            LOG("Starting HeartBeat and NeckTingle thread...");
+            LOG("Starting HeartBeat thread...");
             Thread HeartBeatThread = new Thread(HeartBeatFunc);
             HeartBeatThread.Start();
-            Thread WaterThread = new Thread(WaterFunc);
-            WaterThread.Start();
-            Thread ChokingThread = new Thread(ChokingFunc);
-            ChokingThread.Start();
+            LOG("Check if face or arms are connected...");
+            if (bHaptics.IsDeviceConnected(bHaptics.DeviceType.Tactal)) faceConnected = true;
+            if (bHaptics.IsDeviceConnected(bHaptics.DeviceType.Tactosy_arms)) armsConnected = true;
         }
 
         public void LOG(string logStr)
@@ -146,48 +128,6 @@ namespace MyBhapticsTactsuit
             if (twoHanded) bHaptics.SubmitRegistered(keyVestOther, keyVestOther, scaleOption, rotationFront);
         }
 
-        public void MeatNailerRecoil(bool isRightHand, float intensity = 1.0f, bool twoHanded = false)
-        {
-            float duration = 1.0f;
-            var scaleOption = new bHaptics.ScaleOption(intensity, duration);
-            var rotationFront = new bHaptics.RotationOption(0f, 0f);
-            string postfix = "_L";
-            string otherPostfix = "_R";
-            if (isRightHand) { postfix = "_R"; otherPostfix = "_L"; }
-            string keyArm = "Recoil" + postfix;
-            string keyVest = "MeatNailerVest" + postfix;
-            string keyHands = "RecoilHands" + postfix;
-            string keyArmOther = "Recoil" + otherPostfix;
-            string keyHandsOther = "RecoilHands" + otherPostfix;
-            bHaptics.SubmitRegistered(keyHands, keyHands, scaleOption, rotationFront);
-            bHaptics.SubmitRegistered(keyArm, keyArm, scaleOption, rotationFront);
-            bHaptics.SubmitRegistered(keyVest, keyVest, scaleOption, rotationFront);
-            if (twoHanded)
-            {
-                bHaptics.SubmitRegistered(keyHandsOther, keyHandsOther, scaleOption, rotationFront);
-                bHaptics.SubmitRegistered(keyArmOther, keyArmOther, scaleOption, rotationFront);
-            }
-        }
-
-        public void EnlightenRecoil(bool isRightHand, float intensity = 1.0f, bool twoHanded = false)
-        {
-            float duration = 1.0f;
-            var scaleOption = new bHaptics.ScaleOption(intensity, duration);
-            var rotationFront = new bHaptics.RotationOption(0f, 0f);
-            string postfix = "_L";
-            string otherPostfix = "_R";
-            if (isRightHand) { postfix = "_R"; otherPostfix = "_L"; }
-            string keyArm = "EnlightenGunArm" + postfix;
-            string keyVest = "EnlightenGunVest" + postfix;
-            string keyArmOther = "EnlightenGunArm" + otherPostfix;
-            bHaptics.SubmitRegistered(keyArm, keyArm, scaleOption, rotationFront);
-            bHaptics.SubmitRegistered(keyVest, keyVest, scaleOption, rotationFront);
-            if (twoHanded)
-            {
-                bHaptics.SubmitRegistered(keyArmOther, keyArmOther, scaleOption, rotationFront);
-            }
-        }
-
         public void SwordRecoil(bool isRightHand, float intensity = 1.0f)
         {
             float duration = 1.0f;
@@ -201,43 +141,6 @@ namespace MyBhapticsTactsuit
             bHaptics.SubmitRegistered(keyHands, keyHands, scaleOption, rotationFront);
             bHaptics.SubmitRegistered(keyArm, keyArm, scaleOption, rotationFront);
             bHaptics.SubmitRegistered(keyVest, keyVest, scaleOption, rotationFront);
-        }
-
-        public bool isMinigunPlaying()
-        {
-            if (IsPlaying("Minigun_L")) { return true; }
-            if (IsPlaying("Minigun_R")) { return true; }
-            if (IsPlaying("MinigunDual_L")) { return true; }
-            if (IsPlaying("MinigunDual_R")) { return true; }
-            return false;
-        }
-
-        public void FireMinigun(bool isRightHand, bool twoHanded)
-        {
-            if (isMinigunPlaying()) { return; }
-
-            string postfix = "";
-            if (twoHanded) { postfix += "Dual"; }
-            if (isRightHand) { postfix += "_R"; }
-            else { postfix += "_L"; }
-            string key = "Minigun" + postfix;
-            string keyVest = "MinigunVest" + postfix;
-            string keyHands = "RecoilHands" + postfix;
-            PlaybackHaptics(key);
-            PlaybackHaptics(keyVest);
-            PlaybackHaptics(keyHands);
-        }
-
-        public void StopMinigun(bool isRightHand, bool twoHanded)
-        {
-            string postfix = "";
-            if (twoHanded) { postfix += "Dual"; }
-            if (isRightHand) { postfix += "_R"; }
-            else { postfix += "_L"; }
-            string key = "Minigun" + postfix;
-            string keyVest = "MinigunVest" + postfix;
-            StopHapticFeedback(key);
-            StopHapticFeedback(keyVest);
         }
 
         public void HeadShot(float hitAngle)

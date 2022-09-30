@@ -14,9 +14,9 @@ namespace Bonelab_bhaptics
     {
         public static TactsuitVR tactsuitVr;
 
-        public override void OnApplicationStart()
+        public override void OnInitializeMelon()
         {
-            base.OnApplicationStart();
+            //base.OnApplicationStart();
             tactsuitVr = new TactsuitVR();
             tactsuitVr.PlaybackHaptics("HeartBeat");
         }
@@ -38,20 +38,23 @@ namespace Bonelab_bhaptics
                     if (myHand.handedness == SLZ.Handedness.RIGHT) rightHanded = true;
                 }
                 
-                foreach (var myGrip in __instance.otherGrips)
+                if (__instance.otherGrips != null)
                 {
-                    if (myGrip.attachedHands.Count > 0)
+                    foreach (var myGrip in __instance.otherGrips)
                     {
-                        foreach (var myHand in myGrip.attachedHands)
+                        if (myGrip.attachedHands.Count > 0)
                         {
-                            if ((myHand.handedness == SLZ.Handedness.LEFT) && (rightHanded)) supportHand = true;
-                            if ((myHand.handedness == SLZ.Handedness.RIGHT) && (!rightHanded)) supportHand = true;
+                            foreach (var myHand in myGrip.attachedHands)
+                            {
+                                if ((myHand.handedness == SLZ.Handedness.LEFT) && (rightHanded)) supportHand = true;
+                                if ((myHand.handedness == SLZ.Handedness.RIGHT) && (!rightHanded)) supportHand = true;
+                            }
                         }
                     }
                 }
 
-                tactsuitVr.LOG("Kickforce: " + __instance.kickForce.ToString());
-                float intensity = 1.0f;
+                //tactsuitVr.LOG("Kickforce: " + __instance.kickForce.ToString());
+                float intensity = __instance.kickForce / 12.0f;
 
                 tactsuitVr.GunRecoil(rightHanded, intensity, twoHanded, supportHand);
             }
@@ -87,7 +90,7 @@ namespace Bonelab_bhaptics
             // so cap the shift to [-0.5, 0]...
             float hitShift = hitPosition.y;
             //tactsuitVr.LOG("HitShift: " + hitShift.ToString());
-            float upperBound = 0.0f;
+            float upperBound = 0.5f;
             float lowerBound = -0.5f;
             if (hitShift > upperBound) { hitShift = 0.5f; }
             else if (hitShift < lowerBound) { hitShift = -0.5f; }
@@ -97,7 +100,6 @@ namespace Bonelab_bhaptics
             // No tuple returns available in .NET < 4.0, so this is the easiest quickfix
             return new KeyValuePair<float, float>(myRotation, hitShift);
         }
-
 
         [HarmonyPatch(typeof(PlayerDamageReceiver), "ReceiveAttack", new Type[] { typeof(SLZ.Combat.Attack) })]
         public class bhaptics_ReceiveAttack
@@ -136,14 +138,47 @@ namespace Bonelab_bhaptics
                         damagePattern = "Impact";
                         break;
                 }
-                if (__instance.bodyPart == PlayerDamageReceiver.BodyPart.Head) tactsuitVr.PlaybackHaptics("Headshot_F");
-                if (__instance.bodyPart == PlayerDamageReceiver.BodyPart.LeftArm) tactsuitVr.PlaybackHaptics("Recoil_L");
-                if (__instance.bodyPart == PlayerDamageReceiver.BodyPart.RightArm) tactsuitVr.PlaybackHaptics("Recoil_R");
+                if (__instance.bodyPart == PlayerDamageReceiver.BodyPart.Head)
+                {
+                    if (tactsuitVr.faceConnected)
+                    {
+                        tactsuitVr.PlaybackHaptics("Headshot_F");
+                    }
+                }
+                if (__instance.bodyPart == PlayerDamageReceiver.BodyPart.LeftArm)
+                {
+                    if (tactsuitVr.armsConnected)
+                    {
+                        tactsuitVr.PlaybackHaptics("Recoil_L");
+                        return;
+                    }
+                }
+                if (__instance.bodyPart == PlayerDamageReceiver.BodyPart.RightArm)
+                {
+                    if (tactsuitVr.armsConnected)
+                    {
+                        tactsuitVr.PlaybackHaptics("Recoil_R");
+                        return;
+                    }
+                }
 
-                var angleShift = getAngleAndShift(__instance.transform, attack.direction);
+                var angleShift = getAngleAndShift(__instance.transform, attack.collider.transform.position);
                 tactsuitVr.PlayBackHit(damagePattern, angleShift.Key, angleShift.Value);
+                //tactsuitVr.LOG("Attack: " + __instance.health.curr_Health.ToString() + " " + attack.damage.ToString());
+                //__instance.health.TAKEDAMAGE(attack.damage);
+                /*
+                if (__instance.health.curr_Health - attack.damage >= __instance.health.max_Health) __instance.health.curr_Health = __instance.health.max_Health;
+                else if (__instance.health.curr_Health - attack.damage <= 0.0f)
+                {
+                    __instance.health.TAKEDAMAGE(attack.damage);
+                    return;
+                }
+                else __instance.health.curr_Health -= attack.damage;
+                */
             }
         }
+        
+
 
         [HarmonyPatch(typeof(Player_Health), "Death", new Type[] {  })]
         public class bhaptics_PlayerDeath
@@ -165,6 +200,6 @@ namespace Bonelab_bhaptics
                 else tactsuitVr.StopHeartBeat();
             }
         }
-
+        
     }
 }
