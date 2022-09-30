@@ -13,6 +13,7 @@ namespace Bonelab_bhaptics
     public class Bonelab_bhaptics : MelonMod
     {
         public static TactsuitVR tactsuitVr;
+        public static bool playerRightHanded = true;
 
         public override void OnInitializeMelon()
         {
@@ -168,18 +169,76 @@ namespace Bonelab_bhaptics
             }
         }
 
-        /*
-        [HarmonyPatch(typeof(SLZ.Interaction.InventorySlot), "Insert", new Type[] { typeof(GameObject) })]
+        
+        [HarmonyPatch(typeof(SLZ.Interaction.InventorySlotReceiver), "OnHandGrab", new Type[] { typeof(SLZ.Interaction.Hand) })]
+        public class bhaptics_SlotGrab
+        {
+            [HarmonyPostfix]
+            public static void Postfix(SLZ.Interaction.InventorySlotReceiver __instance, SLZ.Interaction.Hand hand)
+            {
+                if (__instance.isInUIMode) return;
+                if (hand == null) return;
+                bool rightHand = (hand.handedness == SLZ.Handedness.RIGHT);
+                if (__instance.slotType == SLZ.Props.Weapons.WeaponSlot.SlotType.SIDEARM)
+                {
+                    if (rightHand) tactsuitVr.PlaybackHaptics("GrabGun_L");
+                    else tactsuitVr.PlaybackHaptics("GrabGun_R");
+                }
+                else
+                {
+                    if (rightHand) tactsuitVr.PlaybackHaptics("ReceiveShoulder_R");
+                    else tactsuitVr.PlaybackHaptics("ReceiveShoulder_L");
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(SLZ.Interaction.InventorySlotReceiver), "OnHandDrop", new Type[] { typeof(SLZ.Interaction.IGrippable) })]
         public class bhaptics_SlotInsert
         {
             [HarmonyPostfix]
-            public static void Postfix(SLZ.Interaction.InventorySlot __instance)
+            public static void Postfix(SLZ.Interaction.InventorySlotReceiver __instance, SLZ.Interaction.IGrippable host)
             {
-                tactsuitVr.LOG("Insert: " + __instance.name);
-                tactsuitVr.PlaybackHaptics("StoreShotgun_R");
+                if (__instance.isInUIMode) return;
+                if (host == null) return;
+                SLZ.Interaction.Hand hand = host.GetLastHand();
+                bool rightHand = (hand.handedness == SLZ.Handedness.RIGHT);
+                if (__instance.slotType == SLZ.Props.Weapons.WeaponSlot.SlotType.SIDEARM)
+                {
+                    if (rightHand) tactsuitVr.PlaybackHaptics("StoreGun_L");
+                    else tactsuitVr.PlaybackHaptics("StoreGun_R");
+                }
+                else
+                {
+                    if (rightHand) tactsuitVr.PlaybackHaptics("StoreShoulder_R");
+                    else tactsuitVr.PlaybackHaptics("StoreShoulder_L");
+                }
+            }
+        }
+
+        /*
+        [HarmonyPatch(typeof(BaseGameController), "OnSlowTime", new Type[] { typeof(float) })]
+        public class bhaptics_SlowTime
+        {
+            [HarmonyPostfix]
+            public static void Postfix(BaseGameController __instance)
+            {
+                tactsuitVr.PlaybackHaptics("SloMo");
             }
         }
         */
+
+        [HarmonyPatch(typeof(SLZ.Data.SaveData.PlayerSettings), "OnPropertyChanged", new Type[] { typeof(string) })]
+        public class bhaptics_PropertyChanged
+        {
+            [HarmonyPostfix]
+            public static void Postfix(SLZ.Data.SaveData.PlayerSettings __instance)
+            {
+                playerRightHanded = __instance.RightHanded;
+            }
+        }
+
+
+
         [HarmonyPatch(typeof(Player_Health), "Death", new Type[] {  })]
         public class bhaptics_PlayerDeath
         {
