@@ -32,6 +32,7 @@ namespace Bonelab_bhaptics
                 bool twoHanded = false;
                 bool supportHand = false;
 
+                if (__instance.triggerGrip == null) return;
                 twoHanded = (__instance.triggerGrip.attachedHands.Count > 1);
                 
                 foreach (var myHand in __instance.triggerGrip.attachedHands)
@@ -108,6 +109,9 @@ namespace Bonelab_bhaptics
             [HarmonyPostfix]
             public static void Postfix(PlayerDamageReceiver __instance, SLZ.Combat.Attack attack)
             {
+                float armDamage = 0.2f;
+                float headDamage = 0.8f;
+                float bodyDamage = 0.5f;
                 string damagePattern = "Impact";
                 switch (attack.attackType)
                 {
@@ -144,6 +148,8 @@ namespace Bonelab_bhaptics
                     if (tactsuitVr.faceConnected)
                     {
                         tactsuitVr.PlaybackHaptics("Headshot_F");
+                        __instance.health.TAKEDAMAGE(headDamage * attack.damage);
+                        return;
                     }
                 }
                 if (__instance.bodyPart == PlayerDamageReceiver.BodyPart.LeftArm)
@@ -151,6 +157,7 @@ namespace Bonelab_bhaptics
                     if (tactsuitVr.armsConnected)
                     {
                         tactsuitVr.PlaybackHaptics("Recoil_L");
+                        __instance.health.TAKEDAMAGE(armDamage * attack.damage);
                         return;
                     }
                 }
@@ -159,13 +166,14 @@ namespace Bonelab_bhaptics
                     if (tactsuitVr.armsConnected)
                     {
                         tactsuitVr.PlaybackHaptics("Recoil_R");
+                        __instance.health.TAKEDAMAGE(armDamage * attack.damage);
                         return;
                     }
                 }
 
                 var angleShift = getAngleAndShift(__instance.transform, attack.collider.transform.position);
                 tactsuitVr.PlayBackHit(damagePattern, angleShift.Key, angleShift.Value);
-                __instance.health.TAKEDAMAGE(attack.damage);
+                __instance.health.TAKEDAMAGE(bodyDamage * attack.damage);
             }
         }
 
@@ -202,6 +210,7 @@ namespace Bonelab_bhaptics
                 if (__instance.isInUIMode) return;
                 if (host == null) return;
                 SLZ.Interaction.Hand hand = host.GetLastHand();
+                if (hand == null) return;
                 bool rightHand = (hand.handedness == SLZ.Handedness.RIGHT);
                 if (__instance.slotType == SLZ.Props.Weapons.WeaponSlot.SlotType.SIDEARM)
                 {
