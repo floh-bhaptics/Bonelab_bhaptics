@@ -20,14 +20,14 @@ namespace MyBhapticsTactsuit
         private static ManualResetEvent Choking_mrse = new ManualResetEvent(false);
         public Dictionary<String, FileInfo> FeedbackMap = new Dictionary<String, FileInfo>();
 
-        private static bHaptics.RotationOption defaultRotationOption = new bHaptics.RotationOption(0.0f, 0.0f);
+        private static bHapticsLib.RotationOption defaultRotationOption = new bHapticsLib.RotationOption(0.0f, 0.0f);
 
         public void HeartBeatFunc()
         {
             while (true)
             {
                 HeartBeat_mrse.WaitOne();
-                bHaptics.SubmitRegistered("HeartBeat");
+                bHapticsLib.bHapticsManager.PlayRegistered("HeartBeat");
                 Thread.Sleep(1000);
             }
         }
@@ -44,8 +44,8 @@ namespace MyBhapticsTactsuit
             Thread HeartBeatThread = new Thread(HeartBeatFunc);
             HeartBeatThread.Start();
             LOG("Check if face or arms are connected...");
-            if (bHaptics.IsDeviceConnected(bHaptics.DeviceType.Tactal)) faceConnected = true;
-            if (bHaptics.IsDeviceConnected(bHaptics.DeviceType.Tactosy_arms)) armsConnected = true;
+            if (bHapticsLib.bHapticsManager.IsDeviceConnected(bHapticsLib.PositionID.Head)) faceConnected = true;
+            if ((bHapticsLib.bHapticsManager.IsDeviceConnected(bHapticsLib.PositionID.ArmLeft))| (bHapticsLib.bHapticsManager.IsDeviceConnected(bHapticsLib.PositionID.ArmRight))) armsConnected = true;
         }
 
         public void LOG(string logStr)
@@ -71,7 +71,7 @@ namespace MyBhapticsTactsuit
                 string tactFileStr = File.ReadAllText(fullName);
                 try
                 {
-                    bHaptics.RegisterFeedbackFromTactFile(prefix, tactFileStr);
+                    bHapticsLib.bHapticsManager.RegisterPatternFromJson(prefix, tactFileStr);
                     LOG("Pattern registered: " + prefix);
                 }
                 catch (Exception e) { LOG(e.ToString()); }
@@ -86,8 +86,8 @@ namespace MyBhapticsTactsuit
         {
             if (FeedbackMap.ContainsKey(key))
             {
-                bHaptics.ScaleOption scaleOption = new bHaptics.ScaleOption(intensity, duration);
-                bHaptics.SubmitRegistered(key, key, scaleOption, defaultRotationOption);
+                bHapticsLib.ScaleOption scaleOption = new bHapticsLib.ScaleOption(intensity, duration);
+                bHapticsLib.bHapticsManager.PlayRegistered(key, key, scaleOption, defaultRotationOption);
                 // LOG("Playing back: " + key);
             }
             else
@@ -98,16 +98,16 @@ namespace MyBhapticsTactsuit
 
         public void PlayBackHit(String key, float xzAngle, float yShift)
         {
-            bHaptics.ScaleOption scaleOption = new bHaptics.ScaleOption(1f, 1f);
-            bHaptics.RotationOption rotationOption = new bHaptics.RotationOption(xzAngle, yShift);
-            bHaptics.SubmitRegistered(key, key, scaleOption, rotationOption);
+            bHapticsLib.ScaleOption scaleOption = new bHapticsLib.ScaleOption(1f, 1f);
+            bHapticsLib.RotationOption rotationOption = new bHapticsLib.RotationOption(xzAngle, yShift);
+            bHapticsLib.bHapticsManager.PlayRegistered(key, key, scaleOption, rotationOption);
         }
 
         public void GunRecoil(bool isRightHand, float intensity = 1.0f, bool twoHanded = false, bool supportHand = false )
         {
             float duration = 1.0f;
-            var scaleOption = new bHaptics.ScaleOption(intensity, duration);
-            var rotationFront = new bHaptics.RotationOption(0f, 0f);
+            var scaleOption = new bHapticsLib.ScaleOption(intensity, duration);
+            var rotationFront = new bHapticsLib.RotationOption(0f, 0f);
             string postfix = "_L";
             string otherPostfix = "_R";
             if (isRightHand) { postfix = "_R"; otherPostfix = "_L"; }
@@ -117,35 +117,35 @@ namespace MyBhapticsTactsuit
             string keyArmOther = "Recoil" + otherPostfix;
             string keyVestOther = "RecoilVest" + otherPostfix;
             string keyHandsOther = "RecoilHands" + otherPostfix;
-            bHaptics.SubmitRegistered(keyHands, keyHands, scaleOption, rotationFront);
-            bHaptics.SubmitRegistered(keyArm, keyArm, scaleOption, rotationFront);
-            bHaptics.SubmitRegistered(keyVest, keyVest, scaleOption, rotationFront);
+            bHapticsLib.bHapticsManager.PlayRegistered(keyHands, keyHands, scaleOption, rotationFront);
+            bHapticsLib.bHapticsManager.PlayRegistered(keyArm, keyArm, scaleOption, rotationFront);
+            bHapticsLib.bHapticsManager.PlayRegistered(keyVest, keyVest, scaleOption, rotationFront);
             if (twoHanded || supportHand)
             {
-                bHaptics.SubmitRegistered(keyHandsOther, keyHandsOther, scaleOption, rotationFront);
-                bHaptics.SubmitRegistered(keyArmOther, keyArmOther, scaleOption, rotationFront);
+                bHapticsLib.bHapticsManager.PlayRegistered(keyHandsOther, keyHandsOther, scaleOption, rotationFront);
+                bHapticsLib.bHapticsManager.PlayRegistered(keyArmOther, keyArmOther, scaleOption, rotationFront);
             }
-            if (twoHanded) bHaptics.SubmitRegistered(keyVestOther, keyVestOther, scaleOption, rotationFront);
+            if (twoHanded) bHapticsLib.bHapticsManager.PlayRegistered(keyVestOther, keyVestOther, scaleOption, rotationFront);
         }
 
         public void SwordRecoil(bool isRightHand, float intensity = 1.0f)
         {
             float duration = 1.0f;
-            var scaleOption = new bHaptics.ScaleOption(intensity, duration);
-            var rotationFront = new bHaptics.RotationOption(0f, 0f);
+            var scaleOption = new bHapticsLib.ScaleOption(intensity, duration);
+            var rotationFront = new bHapticsLib.RotationOption(0f, 0f);
             string postfix = "_L";
             if (isRightHand) { postfix = "_R"; }
             string keyArm = "Sword" + postfix;
             string keyVest = "SwordVest" + postfix;
             string keyHands = "RecoilHands" + postfix;
-            bHaptics.SubmitRegistered(keyHands, keyHands, scaleOption, rotationFront);
-            bHaptics.SubmitRegistered(keyArm, keyArm, scaleOption, rotationFront);
-            bHaptics.SubmitRegistered(keyVest, keyVest, scaleOption, rotationFront);
+            bHapticsLib.bHapticsManager.PlayRegistered(keyHands, keyHands, scaleOption, rotationFront);
+            bHapticsLib.bHapticsManager.PlayRegistered(keyArm, keyArm, scaleOption, rotationFront);
+            bHapticsLib.bHapticsManager.PlayRegistered(keyVest, keyVest, scaleOption, rotationFront);
         }
 
         public void HeadShot(float hitAngle)
         {
-            if (bHaptics.IsDeviceConnected(bHaptics.DeviceType.Tactal))
+            if (bHapticsLib.bHapticsManager.IsDeviceConnected(bHapticsLib.PositionID.Head))
             {
                 if ((hitAngle < 45f) | (hitAngle > 315f)) { PlaybackHaptics("Headshot_F"); }
                 if ((hitAngle > 45f) && (hitAngle < 135f)) { PlaybackHaptics("Headshot_L"); }
@@ -157,7 +157,7 @@ namespace MyBhapticsTactsuit
 
         public void FootStep(bool isRightFoot)
         {
-            if (!bHaptics.IsDeviceConnected(bHaptics.DeviceType.Tactosy_feet)) { return; }
+            if ((!bHapticsLib.bHapticsManager.IsDeviceConnected(bHapticsLib.PositionID.FootLeft))| (!bHapticsLib.bHapticsManager.IsDeviceConnected(bHapticsLib.PositionID.FootRight))) { return; }
             string postfix = "_L";
             if (isRightFoot) { postfix = "_R"; }
             string key = "FootStep" + postfix;
@@ -192,17 +192,17 @@ namespace MyBhapticsTactsuit
         public void StopChoking()
         {
             Choking_mrse.Reset();
-            bHaptics.TurnOff("TeleportOpened");
+            bHapticsLib.bHapticsManager.StopPlaying("TeleportOpened");
         }
 
         public bool IsPlaying(String effect)
         {
-            return bHaptics.IsPlaying(effect);
+            return bHapticsLib.bHapticsManager.IsPlaying(effect);
         }
 
         public void StopHapticFeedback(String effect)
         {
-            bHaptics.TurnOff(effect);
+            bHapticsLib.bHapticsManager.StopPlaying(effect);
         }
 
         public void StopAllHapticFeedback()
@@ -210,7 +210,7 @@ namespace MyBhapticsTactsuit
             StopThreads();
             foreach (String key in FeedbackMap.Keys)
             {
-                bHaptics.TurnOff(key);
+                bHapticsLib.bHapticsManager.StopPlaying(key);
             }
         }
 

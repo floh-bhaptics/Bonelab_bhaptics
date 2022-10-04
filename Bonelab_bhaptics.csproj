@@ -39,6 +39,9 @@
       <HintPath>F:\SteamLibrary\steamapps\common\BONELAB\MelonLoader\Managed\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="bHapticsLib">
+      <HintPath>F:\SteamLibrary\steamapps\common\BONELAB\MelonLoader\bHapticsLib.dll</HintPath>
+    </Reference>
     <Reference Include="Il2Cppmscorlib">
       <HintPath>F:\SteamLibrary\steamapps\common\BONELAB\MelonLoader\Managed\Il2Cppmscorlib.dll</HintPath>
       <Private>False</Private>
