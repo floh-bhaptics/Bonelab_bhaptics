@@ -286,6 +286,16 @@ namespace Bonelab_bhaptics
                 else tactsuitVr.StopHeartBeat();
             }
         }
-        
+
+        [HarmonyPatch(typeof(PullCordDevice), "SwapAvatar", new Type[] { typeof(SLZ.Marrow.Warehouse.AvatarCrateReference) })]
+        public class bhaptics_SwapAvatar
+        {
+            [HarmonyPostfix]
+            public static void Postfix()
+            {
+                tactsuitVr.PlaybackHaptics("SwitchAvatar");
+            }
+        }
+
     }
 }

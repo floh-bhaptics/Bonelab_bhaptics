@@ -51,6 +51,10 @@
       <HintPath>F:\SteamLibrary\steamapps\common\BONELAB\MelonLoader\MelonLoader.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="SLZ.Marrow">
+      <HintPath>F:\SteamLibrary\steamapps\common\BONELAB\MelonLoader\Managed\SLZ.Marrow.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="SLZ.Marrow.SDK">
       <HintPath>F:\SteamLibrary\steamapps\common\BONELAB\MelonLoader\Managed\SLZ.Marrow.SDK.dll</HintPath>
       <Private>False</Private>
