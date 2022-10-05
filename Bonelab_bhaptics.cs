@@ -123,7 +123,8 @@ namespace Bonelab_bhaptics
                 float armDamage = 0.2f;
                 float headDamage = 0.8f;
                 float bodyDamage = 0.5f;
-                string damagePattern = "Impact";
+                string damagePattern;
+                bool hapticsApplied = false;
                 switch (attack.attackType)
                 {
                     case SLZ.Marrow.Data.AttackType.Piercing:
@@ -160,8 +161,8 @@ namespace Bonelab_bhaptics
                     if (tactsuitVr.faceConnected)
                     {
                         tactsuitVr.PlaybackHaptics("Headshot_F");
-                        __instance.health.TAKEDAMAGE(headDamage * absoluteDamage);
-                        return;
+                        hapticsApplied = true;
+                        absoluteDamage *= headDamage;
                     }
                 }
                 if (__instance.bodyPart == PlayerDamageReceiver.BodyPart.LeftArm)
@@ -169,8 +170,8 @@ namespace Bonelab_bhaptics
                     if (tactsuitVr.armsConnected)
                     {
                         tactsuitVr.PlaybackHaptics("Recoil_L");
-                        __instance.health.TAKEDAMAGE(armDamage * absoluteDamage);
-                        return;
+                        hapticsApplied = true;
+                        absoluteDamage *= armDamage;
                     }
                 }
                 if (__instance.bodyPart == PlayerDamageReceiver.BodyPart.RightArm)
@@ -178,21 +179,18 @@ namespace Bonelab_bhaptics
                     if (tactsuitVr.armsConnected)
                     {
                         tactsuitVr.PlaybackHaptics("Recoil_R");
-                        __instance.health.TAKEDAMAGE(armDamage * absoluteDamage);
-                        return;
+                        hapticsApplied = true;
+                        absoluteDamage *= armDamage;
                     }
                 }
 
-                if (attack.collider != null)
+                if (!hapticsApplied)
                 {
                     var angleShift = getAngleAndShift(__instance.transform, attack.collider.transform.position);
                     tactsuitVr.PlayBackHit(damagePattern, angleShift.Key, angleShift.Value);
+                    absoluteDamage *= bodyDamage;
                 }
-                else
-                {
-                    tactsuitVr.PlaybackHaptics("Impact");
-                }
-                __instance.health.TAKEDAMAGE(bodyDamage * absoluteDamage);
+                __instance.health.TAKEDAMAGE(absoluteDamage);
             }
         }
 
