@@ -17,7 +17,6 @@ namespace Bonelab_bhaptics
 
         public override void OnInitializeMelon()
         {
-            //base.OnApplicationStart();
             tactsuitVr = new TactsuitVR();
             tactsuitVr.PlaybackHaptics("HeartBeat");
         }
@@ -30,8 +29,8 @@ namespace Bonelab_bhaptics
             {
                 bool rightHanded = false;
                 bool twoHanded = false;
-                bool supportHand = false;
-
+                bool supportHand = __instance._isSlideGrabbed;
+                 
                 if (__instance.triggerGrip == null) return;
                 twoHanded = (__instance.triggerGrip.attachedHands.Count > 1);
                 
@@ -39,7 +38,7 @@ namespace Bonelab_bhaptics
                 {
                     if (myHand.handedness == SLZ.Handedness.RIGHT) rightHanded = true;
                 }
-                
+
                 if (__instance.otherGrips != null)
                 {
                     foreach (var myGrip in __instance.otherGrips)
@@ -103,6 +102,18 @@ namespace Bonelab_bhaptics
             return new KeyValuePair<float, float>(myRotation, hitShift);
         }
 
+        /*
+        [HarmonyPatch(typeof(Player_Health), "TAKEDAMAGE", new Type[] { typeof(float) })]
+        public class bhaptics_TakeDamage
+        {
+            [HarmonyPostfix]
+            public static void Postfix(Player_Health __instance, float damage)
+            {
+                tactsuitVr.LOG("PlayerHealth damage: " + __instance.curr_Health.ToString() + " " + damage.ToString());
+            }
+        }
+        */
+
         [HarmonyPatch(typeof(PlayerDamageReceiver), "ReceiveAttack", new Type[] { typeof(SLZ.Combat.Attack) })]
         public class bhaptics_ReceiveAttack
         {
@@ -143,12 +154,13 @@ namespace Bonelab_bhaptics
                         damagePattern = "Impact";
                         break;
                 }
+                float absoluteDamage = Math.Abs(attack.damage);
                 if (__instance.bodyPart == PlayerDamageReceiver.BodyPart.Head)
                 {
                     if (tactsuitVr.faceConnected)
                     {
                         tactsuitVr.PlaybackHaptics("Headshot_F");
-                        __instance.health.TAKEDAMAGE(headDamage * attack.damage);
+                        __instance.health.TAKEDAMAGE(headDamage * absoluteDamage);
                         return;
                     }
                 }
@@ -157,7 +169,7 @@ namespace Bonelab_bhaptics
                     if (tactsuitVr.armsConnected)
                     {
                         tactsuitVr.PlaybackHaptics("Recoil_L");
-                        __instance.health.TAKEDAMAGE(armDamage * attack.damage);
+                        __instance.health.TAKEDAMAGE(armDamage * absoluteDamage);
                         return;
                     }
                 }
@@ -166,14 +178,21 @@ namespace Bonelab_bhaptics
                     if (tactsuitVr.armsConnected)
                     {
                         tactsuitVr.PlaybackHaptics("Recoil_R");
-                        __instance.health.TAKEDAMAGE(armDamage * attack.damage);
+                        __instance.health.TAKEDAMAGE(armDamage * absoluteDamage);
                         return;
                     }
                 }
 
-                var angleShift = getAngleAndShift(__instance.transform, attack.collider.transform.position);
-                tactsuitVr.PlayBackHit(damagePattern, angleShift.Key, angleShift.Value);
-                __instance.health.TAKEDAMAGE(bodyDamage * attack.damage);
+                if (attack.collider != null)
+                {
+                    var angleShift = getAngleAndShift(__instance.transform, attack.collider.transform.position);
+                    tactsuitVr.PlayBackHit(damagePattern, angleShift.Key, angleShift.Value);
+                }
+                else
+                {
+                    tactsuitVr.PlaybackHaptics("Impact");
+                }
+                __instance.health.TAKEDAMAGE(bodyDamage * absoluteDamage);
             }
         }
 
