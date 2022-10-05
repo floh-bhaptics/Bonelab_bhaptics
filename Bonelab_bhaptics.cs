@@ -30,8 +30,10 @@ namespace Bonelab_bhaptics
                 bool rightHanded = false;
                 bool twoHanded = false;
                 bool supportHand = __instance._isSlideGrabbed;
-                 
+
+                if (__instance == null) return;
                 if (__instance.triggerGrip == null) return;
+                if (__instance.AmmoCount() == 0) return;
                 twoHanded = (__instance.triggerGrip.attachedHands.Count > 1);
                 
                 foreach (var myHand in __instance.triggerGrip.attachedHands)
@@ -184,7 +186,7 @@ namespace Bonelab_bhaptics
                     }
                 }
 
-                if (!hapticsApplied)
+                if ((!hapticsApplied) && (attack.collider != null))
                 {
                     var angleShift = getAngleAndShift(__instance.transform, attack.collider.transform.position);
                     tactsuitVr.PlayBackHit(damagePattern, angleShift.Key, angleShift.Value);
