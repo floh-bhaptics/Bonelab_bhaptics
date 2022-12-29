@@ -9,6 +9,9 @@ using MyBhapticsTactsuit;
 using UnityEngine;
 using Il2Cpp;
 
+[assembly: MelonInfo(typeof(Bonelab_bhaptics.Bonelab_bhaptics), "Bonelab_bhaptics", "1.0.7", "Florian Fahrenberger")]
+[assembly: MelonGame("Stress Level Zero", "BONELAB")]
+
 namespace Bonelab_bhaptics
 {
     public class Bonelab_bhaptics : MelonMod

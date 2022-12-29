@@ -83,7 +83,9 @@
   <ItemGroup>
     <Compile Include="Bonelab_bhaptics.cs" />
     <Compile Include="MyBhapticsTactsuit.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
