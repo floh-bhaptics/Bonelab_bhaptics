@@ -9,14 +9,14 @@ using MyBhapticsTactsuit;
 using UnityEngine;
 using Il2Cpp;
 
-[assembly: MelonInfo(typeof(Bonelab_bhaptics.Bonelab_bhaptics), "Bonelab_bhaptics", "1.0.7", "Florian Fahrenberger")]
+[assembly: MelonInfo(typeof(Bonelab_bhaptics.Bonelab_bhaptics), "Bonelab_bhaptics", "2.0.0", "Florian Fahrenberger")]
 [assembly: MelonGame("Stress Level Zero", "BONELAB")]
 
 namespace Bonelab_bhaptics
 {
     public class Bonelab_bhaptics : MelonMod
     {
-        public static TactsuitVR tactsuitVr;
+        public static TactsuitVR tactsuitVr = null!;
         public static bool playerRightHanded = true;
 
         public override void OnInitializeMelon()
@@ -61,8 +61,7 @@ namespace Bonelab_bhaptics
                 }
 
                 //tactsuitVr.LOG("Kickforce: " + __instance.kickForce.ToString());
-                float intensity = __instance.kickForce / 12.0f;
-
+                float intensity = Mathf.Min(Mathf.Max(__instance.kickForce / 12.0f, 1.0f), 0.5f);
                 tactsuitVr.GunRecoil(rightHanded, intensity, twoHanded, supportHand);
             }
         }
