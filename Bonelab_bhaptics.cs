@@ -7,6 +7,7 @@ using MelonLoader;
 using HarmonyLib;
 using MyBhapticsTactsuit;
 using UnityEngine;
+using SLZ.Rig;
 
 namespace Bonelab_bhaptics
 {
@@ -14,12 +15,25 @@ namespace Bonelab_bhaptics
     {
         public static TactsuitVR tactsuitVr;
         public static bool playerRightHanded = true;
+        public static RigManager myRigManager = null;
 
         public override void OnInitializeMelon()
         {
             tactsuitVr = new TactsuitVR();
             tactsuitVr.PlaybackHaptics("HeartBeat");
         }
+
+        [HarmonyPatch(typeof(SLZ.Bonelab.BonelabGameControl), "FinalizeInventory", new Type[] { })]
+        public class bhaptics_GameControlRigManager
+        {
+            [HarmonyPostfix]
+            public static void Postfix(SLZ.Bonelab.BonelabGameControl __instance)
+            {
+                tactsuitVr.LOG("Player RigManager initialized.");
+                myRigManager = __instance.PlayerRigManager;
+            }
+        }
+
 
         [HarmonyPatch(typeof(SLZ.Props.Weapons.Gun), "Fire", new Type[] { })]
         public class bhaptics_FireGun
@@ -39,6 +53,7 @@ namespace Bonelab_bhaptics
                 foreach (var myHand in __instance.triggerGrip.attachedHands)
                 {
                     if (myHand.handedness == SLZ.Handedness.RIGHT) rightHanded = true;
+                    if (myHand.manager != myRigManager) return;
                 }
 
                 if (__instance.otherGrips != null)
@@ -205,6 +220,7 @@ namespace Bonelab_bhaptics
             {
                 if (__instance.isInUIMode) return;
                 if (hand == null) return;
+                if (hand.manager != myRigManager) return;
                 bool rightHand = (hand.handedness == SLZ.Handedness.RIGHT);
                 if (__instance.slotType == SLZ.Props.Weapons.WeaponSlot.SlotType.SIDEARM)
                 {
@@ -230,6 +246,7 @@ namespace Bonelab_bhaptics
                 if (host == null) return;
                 SLZ.Interaction.Hand hand = host.GetLastHand();
                 if (hand == null) return;
+                if (hand.manager != myRigManager) return;
                 bool rightHand = (hand.handedness == SLZ.Handedness.RIGHT);
                 if (__instance.slotType == SLZ.Props.Weapons.WeaponSlot.SlotType.SIDEARM)
                 {
@@ -256,11 +273,11 @@ namespace Bonelab_bhaptics
         }
         */
 
-        [HarmonyPatch(typeof(SLZ.Data.SaveData.PlayerSettings), "OnPropertyChanged", new Type[] { typeof(string) })]
+        [HarmonyPatch(typeof(SLZ.SaveData.PlayerSettings), "OnPropertyChanged", new Type[] { typeof(string) })]
         public class bhaptics_PropertyChanged
         {
             [HarmonyPostfix]
-            public static void Postfix(SLZ.Data.SaveData.PlayerSettings __instance)
+            public static void Postfix(SLZ.SaveData.PlayerSettings __instance)
             {
                 playerRightHanded = __instance.RightHanded;
             }
@@ -289,7 +306,7 @@ namespace Bonelab_bhaptics
             }
         }
 
-        [HarmonyPatch(typeof(PullCordDevice), "SwapAvatar", new Type[] { typeof(SLZ.Marrow.Warehouse.AvatarCrateReference) })]
+        [HarmonyPatch(typeof(SLZ.Props.PullCordDevice), "SwapAvatar", new Type[] { typeof(SLZ.Marrow.Warehouse.AvatarCrateReference) })]
         public class bhaptics_SwapAvatar
         {
             [HarmonyPostfix]
