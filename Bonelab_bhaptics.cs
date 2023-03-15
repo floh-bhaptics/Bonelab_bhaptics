@@ -8,7 +8,6 @@ using HarmonyLib;
 using MyBhapticsTactsuit;
 using UnityEngine;
 using Il2Cpp;
-using Il2CppSLZ.Rig;
 
 [assembly: MelonInfo(typeof(Bonelab_bhaptics.Bonelab_bhaptics), "Bonelab_bhaptics", "2.0.0", "Florian Fahrenberger")]
 [assembly: MelonGame("Stress Level Zero", "BONELAB")]
@@ -19,26 +18,12 @@ namespace Bonelab_bhaptics
     {
         public static TactsuitVR tactsuitVr = null!;
         public static bool playerRightHanded = true;
-        public static RigManager? myRigManager = null;
 
         public override void OnInitializeMelon()
         {
             tactsuitVr = new TactsuitVR();
             tactsuitVr.PlaybackHaptics("HeartBeat");
         }
-
-        [HarmonyPatch(typeof(Il2CppSLZ.Bonelab.BonelabGameControl), "FinalizeInventory", new Type[] {  })]
-        public class bhaptics_GameControlRigManager
-        {
-            [HarmonyPostfix]
-            public static void Postfix(Il2CppSLZ.Bonelab.BonelabGameControl __instance)
-            {
-                tactsuitVr.LOG("Player RigManager initialized.");
-                myRigManager = __instance.PlayerRigManager;
-            }
-        }
-
-
 
         [HarmonyPatch(typeof(Il2CppSLZ.Props.Weapons.Gun), "Fire", new Type[] { })]
         public class bhaptics_FireGun
@@ -58,7 +43,6 @@ namespace Bonelab_bhaptics
                 foreach (var myHand in __instance.triggerGrip.attachedHands)
                 {
                     if (myHand.handedness == Il2CppSLZ.Handedness.RIGHT) rightHanded = true;
-                    if (myHand.manager != myRigManager) return;
                 }
 
                 if (__instance.otherGrips != null)
@@ -224,7 +208,6 @@ namespace Bonelab_bhaptics
             {
                 if (__instance.isInUIMode) return;
                 if (hand == null) return;
-                if (hand.manager != myRigManager) return;
                 bool rightHand = (hand.handedness == Il2CppSLZ.Handedness.RIGHT);
                 if (__instance.slotType == Il2CppSLZ.Props.Weapons.WeaponSlot.SlotType.SIDEARM)
                 {
@@ -250,7 +233,6 @@ namespace Bonelab_bhaptics
                 if (host == null) return;
                 Il2CppSLZ.Interaction.Hand hand = host.GetLastHand();
                 if (hand == null) return;
-                if (hand.manager != myRigManager) return;
                 bool rightHand = (hand.handedness == Il2CppSLZ.Handedness.RIGHT);
                 if (__instance.slotType == Il2CppSLZ.Props.Weapons.WeaponSlot.SlotType.SIDEARM)
                 {
@@ -314,7 +296,7 @@ namespace Bonelab_bhaptics
         public class bhaptics_SwapAvatar
         {
             [HarmonyPostfix]
-            public static void Postfix(Il2CppSLZ.Props.PullCordDevice __instance)
+            public static void Postfix()
             {
                 tactsuitVr.PlaybackHaptics("SwitchAvatar");
             }
