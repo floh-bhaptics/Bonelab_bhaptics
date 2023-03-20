@@ -29,8 +29,11 @@ namespace Bonelab_bhaptics
             [HarmonyPostfix]
             public static void Postfix(SLZ.Rig.RigManager __instance)
             {
-                tactsuitVr.LOG("Player RigManager initialized... " + __instance.name);
-                myRigManager = __instance;
+                if (myRigManager == null)
+                {
+                    tactsuitVr.LOG("Player RigManager initialized... " + __instance.name);
+                    myRigManager = __instance;
+                }
             }
         }
 
