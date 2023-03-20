@@ -23,14 +23,14 @@ namespace Bonelab_bhaptics
             tactsuitVr.PlaybackHaptics("HeartBeat");
         }
 
-        [HarmonyPatch(typeof(SLZ.Bonelab.BonelabGameControl), "FinalizeInventory", new Type[] { })]
+        [HarmonyPatch(typeof(SLZ.Rig.RigManager), "Awake", new Type[] { })]
         public class bhaptics_GameControlRigManager
         {
             [HarmonyPostfix]
-            public static void Postfix(SLZ.Bonelab.BonelabGameControl __instance)
+            public static void Postfix(SLZ.Rig.RigManager __instance)
             {
-                tactsuitVr.LOG("Player RigManager initialized.");
-                myRigManager = __instance.PlayerRigManager;
+                tactsuitVr.LOG("Player RigManager initialized... " + __instance.name);
+                myRigManager = __instance;
             }
         }
 
@@ -47,13 +47,14 @@ namespace Bonelab_bhaptics
 
                 if (__instance == null) return;
                 if (__instance.triggerGrip == null) return;
-                if (__instance.AmmoCount() == 0) return;
+                try { if ((__instance.AmmoCount() <= 0) && (__instance.chamberedCartridge == null)) return; }
+                catch { tactsuitVr.LOG("NullReference in AmmoCount."); return; }
                 twoHanded = (__instance.triggerGrip.attachedHands.Count > 1);
-                
                 foreach (var myHand in __instance.triggerGrip.attachedHands)
                 {
                     if (myHand.handedness == SLZ.Handedness.RIGHT) rightHanded = true;
-                    if (myHand.manager != myRigManager) return;
+                    if (myRigManager != null)
+                        if (myHand.manager != myRigManager) return;
                 }
 
                 if (__instance.otherGrips != null)
@@ -72,7 +73,7 @@ namespace Bonelab_bhaptics
                 }
 
                 //tactsuitVr.LOG("Kickforce: " + __instance.kickForce.ToString());
-                float intensity = __instance.kickForce / 12.0f;
+                float intensity = Mathf.Min(Mathf.Max(__instance.kickForce / 12.0f, 1.0f), 0.5f);
 
                 tactsuitVr.GunRecoil(rightHanded, intensity, twoHanded, supportHand);
             }
@@ -137,6 +138,8 @@ namespace Bonelab_bhaptics
             [HarmonyPostfix]
             public static void Postfix(PlayerDamageReceiver __instance, SLZ.Combat.Attack attack)
             {
+                if (myRigManager != null)
+                    if (__instance.health._rigManager != myRigManager) return;
                 float armDamage = 0.2f;
                 float headDamage = 0.8f;
                 float bodyDamage = 0.5f;
@@ -220,7 +223,8 @@ namespace Bonelab_bhaptics
             {
                 if (__instance.isInUIMode) return;
                 if (hand == null) return;
-                if (hand.manager != myRigManager) return;
+                if (myRigManager != null)
+                    if (hand.manager != myRigManager) return;
                 bool rightHand = (hand.handedness == SLZ.Handedness.RIGHT);
                 if (__instance.slotType == SLZ.Props.Weapons.WeaponSlot.SlotType.SIDEARM)
                 {
@@ -246,7 +250,8 @@ namespace Bonelab_bhaptics
                 if (host == null) return;
                 SLZ.Interaction.Hand hand = host.GetLastHand();
                 if (hand == null) return;
-                if (hand.manager != myRigManager) return;
+                if (myRigManager != null)
+                    if (hand.manager != myRigManager) return;
                 bool rightHand = (hand.handedness == SLZ.Handedness.RIGHT);
                 if (__instance.slotType == SLZ.Props.Weapons.WeaponSlot.SlotType.SIDEARM)
                 {
@@ -291,6 +296,8 @@ namespace Bonelab_bhaptics
             [HarmonyPostfix]
             public static void Postfix(Player_Health __instance)
             {
+                if (myRigManager != null)
+                    if (__instance._rigManager != myRigManager) return;
                 tactsuitVr.StopThreads();
             }
         }
@@ -301,6 +308,8 @@ namespace Bonelab_bhaptics
             [HarmonyPostfix]
             public static void Postfix(Player_Health __instance)
             {
+                if (myRigManager != null)
+                    if (__instance._rigManager != myRigManager) return;
                 if (__instance.curr_Health <= 0.3f * __instance.max_Health) tactsuitVr.StartHeartBeat();
                 else tactsuitVr.StopHeartBeat();
             }
@@ -310,8 +319,10 @@ namespace Bonelab_bhaptics
         public class bhaptics_SwapAvatar
         {
             [HarmonyPostfix]
-            public static void Postfix()
+            public static void Postfix(SLZ.Props.PullCordDevice __instance)
             {
+                if (myRigManager != null)
+                    if (__instance.rm != myRigManager) return;
                 tactsuitVr.PlaybackHaptics("SwitchAvatar");
             }
         }
