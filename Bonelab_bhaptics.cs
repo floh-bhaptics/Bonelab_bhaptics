@@ -10,7 +10,7 @@ using UnityEngine;
 using Il2CppSLZ.Bonelab;
 
 
-[assembly: MelonInfo(typeof(Bonelab_bhaptics.Bonelab_bhaptics), "Bonelab_bhaptics", "2.0.0", "Florian Fahrenberger")]
+[assembly: MelonInfo(typeof(Bonelab_bhaptics.Bonelab_bhaptics), "Bonelab_bhaptics", "3.0.0", "Florian Fahrenberger")]
 [assembly: MelonGame("Stress Level Zero", "BONELAB")]
 
 namespace Bonelab_bhaptics
