@@ -7,7 +7,8 @@ using MelonLoader;
 using HarmonyLib;
 using MyBhapticsTactsuit;
 using UnityEngine;
-using Il2Cpp;
+using Il2CppSLZ.Bonelab;
+
 
 [assembly: MelonInfo(typeof(Bonelab_bhaptics.Bonelab_bhaptics), "Bonelab_bhaptics", "2.0.0", "Florian Fahrenberger")]
 [assembly: MelonGame("Stress Level Zero", "BONELAB")]
@@ -25,11 +26,11 @@ namespace Bonelab_bhaptics
             tactsuitVr.PlaybackHaptics("HeartBeat");
         }
 
-        [HarmonyPatch(typeof(Il2CppSLZ.Props.Weapons.Gun), "Fire", new Type[] { })]
+        [HarmonyPatch(typeof(Gun), "Fire", new Type[] { })]
         public class bhaptics_FireGun
         {
             [HarmonyPostfix]
-            public static void Postfix(Il2CppSLZ.Props.Weapons.Gun __instance)
+            public static void Postfix(Gun __instance)
             {
                 bool rightHanded = false;
                 bool twoHanded = false;
@@ -42,7 +43,7 @@ namespace Bonelab_bhaptics
                 
                 foreach (var myHand in __instance.triggerGrip.attachedHands)
                 {
-                    if (myHand.handedness == Il2CppSLZ.Handedness.RIGHT) rightHanded = true;
+                    if (myHand.handedness == Il2CppSLZ.Marrow.Interaction.Handedness.RIGHT) rightHanded = true;
                 }
 
                 if (__instance.otherGrips != null)
@@ -53,15 +54,16 @@ namespace Bonelab_bhaptics
                         {
                             foreach (var myHand in myGrip.attachedHands)
                             {
-                                if ((myHand.handedness == Il2CppSLZ.Handedness.LEFT) && (rightHanded)) supportHand = true;
-                                if ((myHand.handedness == Il2CppSLZ.Handedness.RIGHT) && (!rightHanded)) supportHand = true;
+                                if ((myHand.handedness == Il2CppSLZ.Marrow.Interaction.Handedness.LEFT) && (rightHanded)) supportHand = true;
+                                if ((myHand.handedness == Il2CppSLZ.Marrow.Interaction.Handedness.RIGHT) && (!rightHanded)) supportHand = true;
                             }
                         }
                     }
                 }
 
                 //tactsuitVr.LOG("Kickforce: " + __instance.kickForce.ToString());
-                float intensity = Mathf.Min(Mathf.Max(__instance.kickForce / 12.0f, 1.0f), 0.5f);
+                //float intensity = Mathf.Min(Mathf.Max(__instance.kickForce / 12.0f, 1.0f), 0.5f);
+                float intensity = 1.0f;
                 tactsuitVr.GunRecoil(rightHanded, intensity, twoHanded, supportHand);
             }
         }
@@ -119,11 +121,11 @@ namespace Bonelab_bhaptics
         }
         */
 
-        [HarmonyPatch(typeof(PlayerDamageReceiver), "ReceiveAttack", new Type[] { typeof(Il2CppSLZ.Combat.Attack) })]
+        [HarmonyPatch(typeof(Il2CppSLZ.Player.PlayerDamageReceiver), "ReceiveAttack", new Type[] { typeof(Il2CppSLZ.Marrow.Combat.Attack) })]
         public class bhaptics_ReceiveAttack
         {
             [HarmonyPostfix]
-            public static void Postfix(PlayerDamageReceiver __instance, Il2CppSLZ.Combat.Attack attack)
+            public static void Postfix(Il2CppSLZ.Player.PlayerDamageReceiver __instance, Il2CppSLZ.Marrow.Combat.Attack attack)
             {
                 float armDamage = 0.2f;
                 float headDamage = 0.8f;
@@ -161,7 +163,7 @@ namespace Bonelab_bhaptics
                         break;
                 }
                 float absoluteDamage = Math.Abs(attack.damage);
-                if (__instance.bodyPart == PlayerDamageReceiver.BodyPart.Head)
+                if (__instance.bodyPart == Il2CppSLZ.Player.PlayerDamageReceiver.BodyPart.Head)
                 {
                     if (tactsuitVr.faceConnected)
                     {
@@ -170,7 +172,7 @@ namespace Bonelab_bhaptics
                         absoluteDamage *= headDamage;
                     }
                 }
-                if (__instance.bodyPart == PlayerDamageReceiver.BodyPart.LeftArm)
+                if ((__instance.bodyPart == Il2CppSLZ.Player.PlayerDamageReceiver.BodyPart.ArmLowerLf) || (__instance.bodyPart == Il2CppSLZ.Player.PlayerDamageReceiver.BodyPart.ArmUpperLf))
                 {
                     if (tactsuitVr.armsConnected)
                     {
@@ -179,7 +181,7 @@ namespace Bonelab_bhaptics
                         absoluteDamage *= armDamage;
                     }
                 }
-                if (__instance.bodyPart == PlayerDamageReceiver.BodyPart.RightArm)
+                if ((__instance.bodyPart == Il2CppSLZ.Player.PlayerDamageReceiver.BodyPart.ArmLowerRt) || (__instance.bodyPart == Il2CppSLZ.Player.PlayerDamageReceiver.BodyPart.ArmUpperRt))
                 {
                     if (tactsuitVr.armsConnected)
                     {
@@ -208,8 +210,8 @@ namespace Bonelab_bhaptics
             {
                 if (__instance.isInUIMode) return;
                 if (hand == null) return;
-                bool rightHand = (hand.handedness == Il2CppSLZ.Handedness.RIGHT);
-                if (__instance.slotType == Il2CppSLZ.Props.Weapons.WeaponSlot.SlotType.SIDEARM)
+                bool rightHand = (hand.handedness == Il2CppSLZ.Marrow.Interaction.Handedness.RIGHT);
+                if (__instance.slotType == Il2CppSLZ.Interaction.SlotType.SIDEARM)
                 {
                     if (rightHand) tactsuitVr.PlaybackHaptics("GrabGun_L");
                     else tactsuitVr.PlaybackHaptics("GrabGun_R");
@@ -233,8 +235,8 @@ namespace Bonelab_bhaptics
                 if (host == null) return;
                 Il2CppSLZ.Interaction.Hand hand = host.GetLastHand();
                 if (hand == null) return;
-                bool rightHand = (hand.handedness == Il2CppSLZ.Handedness.RIGHT);
-                if (__instance.slotType == Il2CppSLZ.Props.Weapons.WeaponSlot.SlotType.SIDEARM)
+                bool rightHand = (hand.handedness == Il2CppSLZ.Marrow.Interaction.Handedness.RIGHT);
+                if (__instance.slotType == Il2CppSLZ.Interaction.SlotType.SIDEARM)
                 {
                     if (rightHand) tactsuitVr.PlaybackHaptics("StoreGun_L");
                     else tactsuitVr.PlaybackHaptics("StoreGun_R");
@@ -259,11 +261,11 @@ namespace Bonelab_bhaptics
         }
         */
 
-        [HarmonyPatch(typeof(Il2CppSLZ.SaveData.PlayerSettings), "OnPropertyChanged", new Type[] { typeof(string) })]
+        [HarmonyPatch(typeof(Il2CppSLZ.Bonelab.SaveData.PlayerSettings), "FixFieldsIfNeeded", new Type[] {  })]
         public class bhaptics_PropertyChanged
         {
             [HarmonyPostfix]
-            public static void Postfix(Il2CppSLZ.SaveData.PlayerSettings __instance)
+            public static void Postfix(Il2CppSLZ.Bonelab.SaveData.PlayerSettings __instance)
             {
                 playerRightHanded = __instance.RightHanded;
             }
@@ -281,7 +283,7 @@ namespace Bonelab_bhaptics
             }
         }
 
-        [HarmonyPatch(typeof(Player_Health), "Update", new Type[] { })]
+        [HarmonyPatch(typeof(Player_Health), "UpdateHealth", new Type[] { typeof(float) })]
         public class bhaptics_PlayerHealthUpdate
         {
             [HarmonyPostfix]
@@ -292,7 +294,7 @@ namespace Bonelab_bhaptics
             }
         }
 
-        [HarmonyPatch(typeof(Il2CppSLZ.Props.PullCordDevice), "SwapAvatar", new Type[] { typeof(Il2CppSLZ.Marrow.Warehouse.AvatarCrateReference) })]
+        [HarmonyPatch(typeof(PullCordDevice), "SwapAvatar", new Type[] { typeof(Il2CppSLZ.Marrow.Warehouse.AvatarCrateReference) })]
         public class bhaptics_SwapAvatar
         {
             [HarmonyPostfix]
