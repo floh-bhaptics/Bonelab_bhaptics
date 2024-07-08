@@ -10,7 +10,7 @@ using UnityEngine;
 using Il2CppSLZ.Bonelab;
 
 
-[assembly: MelonInfo(typeof(Bonelab_bhaptics.Bonelab_bhaptics), "Bonelab_bhaptics", "3.0.0", "Florian Fahrenberger")]
+[assembly: MelonInfo(typeof(Bonelab_bhaptics.Bonelab_bhaptics), "Bonelab_bhaptics", "3.0.1", "Florian Fahrenberger")]
 [assembly: MelonGame("Stress Level Zero", "BONELAB")]
 
 namespace Bonelab_bhaptics
@@ -260,18 +260,6 @@ namespace Bonelab_bhaptics
             }
         }
         */
-
-        [HarmonyPatch(typeof(Il2CppSLZ.Bonelab.SaveData.PlayerSettings), "FixFieldsIfNeeded", new Type[] {  })]
-        public class bhaptics_PropertyChanged
-        {
-            [HarmonyPostfix]
-            public static void Postfix(Il2CppSLZ.Bonelab.SaveData.PlayerSettings __instance)
-            {
-                playerRightHanded = __instance.RightHanded;
-            }
-        }
-
-
 
         [HarmonyPatch(typeof(Player_Health), "Death", new Type[] {  })]
         public class bhaptics_PlayerDeath
