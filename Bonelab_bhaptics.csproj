@@ -42,10 +42,6 @@
       <HintPath>F:\SteamLibrary\steamapps\common\BONELAB\MelonLoader\Il2CppAssemblies\Il2CppSLZ.Marrow.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Il2CppSLZ.Marrow.SDK">
-      <HintPath>F:\SteamLibrary\steamapps\common\BONELAB\MelonLoader\Il2CppAssemblies\Il2CppSLZ.Marrow.SDK.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="MelonLoader">
       <HintPath>F:\SteamLibrary\steamapps\common\BONELAB\MelonLoader\net6\MelonLoader.dll</HintPath>
       <Private>False</Private>

@@ -8,9 +8,10 @@ using HarmonyLib;
 using MyBhapticsTactsuit;
 using UnityEngine;
 using Il2CppSLZ.Bonelab;
+using Il2CppSLZ.Marrow;
 
 
-[assembly: MelonInfo(typeof(Bonelab_bhaptics.Bonelab_bhaptics), "Bonelab_bhaptics", "3.0.1", "Florian Fahrenberger")]
+[assembly: MelonInfo(typeof(Bonelab_bhaptics.Bonelab_bhaptics), "Bonelab_bhaptics", "3.0.2", "Florian Fahrenberger")]
 [assembly: MelonGame("Stress Level Zero", "BONELAB")]
 
 namespace Bonelab_bhaptics
@@ -121,11 +122,11 @@ namespace Bonelab_bhaptics
         }
         */
 
-        [HarmonyPatch(typeof(Il2CppSLZ.Player.PlayerDamageReceiver), "ReceiveAttack", new Type[] { typeof(Il2CppSLZ.Marrow.Combat.Attack) })]
+        [HarmonyPatch(typeof(PlayerDamageReceiver), "ReceiveAttack", new Type[] { typeof(Il2CppSLZ.Marrow.Combat.Attack) })]
         public class bhaptics_ReceiveAttack
         {
             [HarmonyPostfix]
-            public static void Postfix(Il2CppSLZ.Player.PlayerDamageReceiver __instance, Il2CppSLZ.Marrow.Combat.Attack attack)
+            public static void Postfix(PlayerDamageReceiver __instance, Il2CppSLZ.Marrow.Combat.Attack attack)
             {
                 float armDamage = 0.2f;
                 float headDamage = 0.8f;
@@ -140,17 +141,8 @@ namespace Bonelab_bhaptics
                     case Il2CppSLZ.Marrow.Data.AttackType.Blunt:
                         damagePattern = "Impact";
                         break;
-                    case Il2CppSLZ.Marrow.Data.AttackType.Electric:
-                        damagePattern = "ElectricHit";
-                        break;
-                    case Il2CppSLZ.Marrow.Data.AttackType.Explosive:
-                        damagePattern = "ExplosionFace";
-                        break;
                     case Il2CppSLZ.Marrow.Data.AttackType.Fire:
                         damagePattern = "LavaballHit";
-                        break;
-                    case Il2CppSLZ.Marrow.Data.AttackType.Ice:
-                        damagePattern = "FreezeHit";
                         break;
                     case Il2CppSLZ.Marrow.Data.AttackType.Slicing:
                         damagePattern = "BladeHit";
@@ -163,7 +155,7 @@ namespace Bonelab_bhaptics
                         break;
                 }
                 float absoluteDamage = Math.Abs(attack.damage);
-                if (__instance.bodyPart == Il2CppSLZ.Player.PlayerDamageReceiver.BodyPart.Head)
+                if (__instance.bodyPart == PlayerDamageReceiver.BodyPart.Head)
                 {
                     if (tactsuitVr.faceConnected)
                     {
@@ -172,7 +164,7 @@ namespace Bonelab_bhaptics
                         absoluteDamage *= headDamage;
                     }
                 }
-                if ((__instance.bodyPart == Il2CppSLZ.Player.PlayerDamageReceiver.BodyPart.ArmLowerLf) || (__instance.bodyPart == Il2CppSLZ.Player.PlayerDamageReceiver.BodyPart.ArmUpperLf))
+                if ((__instance.bodyPart == PlayerDamageReceiver.BodyPart.ArmLowerLf) || (__instance.bodyPart == PlayerDamageReceiver.BodyPart.ArmUpperLf))
                 {
                     if (tactsuitVr.armsConnected)
                     {
@@ -181,7 +173,7 @@ namespace Bonelab_bhaptics
                         absoluteDamage *= armDamage;
                     }
                 }
-                if ((__instance.bodyPart == Il2CppSLZ.Player.PlayerDamageReceiver.BodyPart.ArmLowerRt) || (__instance.bodyPart == Il2CppSLZ.Player.PlayerDamageReceiver.BodyPart.ArmUpperRt))
+                if ((__instance.bodyPart == PlayerDamageReceiver.BodyPart.ArmLowerRt) || (__instance.bodyPart == PlayerDamageReceiver.BodyPart.ArmUpperRt))
                 {
                     if (tactsuitVr.armsConnected)
                     {
@@ -202,16 +194,16 @@ namespace Bonelab_bhaptics
         }
 
         
-        [HarmonyPatch(typeof(Il2CppSLZ.Interaction.InventorySlotReceiver), "OnHandGrab", new Type[] { typeof(Il2CppSLZ.Interaction.Hand) })]
+        [HarmonyPatch(typeof(InventorySlotReceiver), "OnHandGrab", new Type[] { typeof(Hand) })]
         public class bhaptics_SlotGrab
         {
             [HarmonyPostfix]
-            public static void Postfix(Il2CppSLZ.Interaction.InventorySlotReceiver __instance, Il2CppSLZ.Interaction.Hand hand)
+            public static void Postfix(InventorySlotReceiver __instance, Hand hand)
             {
                 if (__instance.isInUIMode) return;
                 if (hand == null) return;
                 bool rightHand = (hand.handedness == Il2CppSLZ.Marrow.Interaction.Handedness.RIGHT);
-                if (__instance.slotType == Il2CppSLZ.Interaction.SlotType.SIDEARM)
+                if (__instance.slotType == SlotType.SIDEARM)
                 {
                     if (rightHand) tactsuitVr.PlaybackHaptics("GrabGun_L");
                     else tactsuitVr.PlaybackHaptics("GrabGun_R");
@@ -224,19 +216,19 @@ namespace Bonelab_bhaptics
             }
         }
 
-        [HarmonyPatch(typeof(Il2CppSLZ.Interaction.InventorySlotReceiver), "OnHandDrop", new Type[] { typeof(Il2CppSLZ.Interaction.IGrippable) })]
+        [HarmonyPatch(typeof(InventorySlotReceiver), "OnHandDrop", new Type[] { typeof(IGrippable) })]
         public class bhaptics_SlotInsert
         {
             [HarmonyPostfix]
-            public static void Postfix(Il2CppSLZ.Interaction.InventorySlotReceiver __instance, Il2CppSLZ.Interaction.IGrippable host)
+            public static void Postfix(InventorySlotReceiver __instance, IGrippable host)
             {
                 if (__instance == null) return;
                 if (__instance.isInUIMode) return;
                 if (host == null) return;
-                Il2CppSLZ.Interaction.Hand hand = host.GetLastHand();
+                Hand hand = host.GetLastHand();
                 if (hand == null) return;
                 bool rightHand = (hand.handedness == Il2CppSLZ.Marrow.Interaction.Handedness.RIGHT);
-                if (__instance.slotType == Il2CppSLZ.Interaction.SlotType.SIDEARM)
+                if (__instance.slotType == SlotType.SIDEARM)
                 {
                     if (rightHand) tactsuitVr.PlaybackHaptics("StoreGun_L");
                     else tactsuitVr.PlaybackHaptics("StoreGun_R");
