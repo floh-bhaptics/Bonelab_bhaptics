@@ -12,7 +12,7 @@ using Il2CppSLZ.Marrow;
 using static MelonLoader.MelonLogger;
 
 
-[assembly: MelonInfo(typeof(Bonelab_bhaptics.Bonelab_bhaptics), "Bonelab_bhaptics", "3.1.0", "Florian Fahrenberger")]
+[assembly: MelonInfo(typeof(Bonelab_bhaptics.Bonelab_bhaptics), "Bonelab_bhaptics", "3.2.0", "Florian Fahrenberger")]
 [assembly: MelonGame("Stress Level Zero", "BONELAB")]
 
 namespace Bonelab_bhaptics
@@ -181,35 +181,36 @@ namespace Bonelab_bhaptics
                 float absoluteDamage = Math.Abs(attack.damage);
                 if (__instance.bodyPart == PlayerDamageReceiver.BodyPart.Head)
                 {
+                    absoluteDamage *= headDamage;
                     if (tactsuitVr.faceConnected)
                     {
                         tactsuitVr.PlaybackHaptics("Headshot_F");
                         hapticsApplied = true;
-                        absoluteDamage *= headDamage;
                     }
                 }
                 if ((__instance.bodyPart == PlayerDamageReceiver.BodyPart.ArmLowerLf) || (__instance.bodyPart == PlayerDamageReceiver.BodyPart.ArmUpperLf))
                 {
+                    absoluteDamage *= armDamage;
                     if (tactsuitVr.armsConnected)
                     {
                         tactsuitVr.PlaybackHaptics("Recoil_L");
                         hapticsApplied = true;
-                        absoluteDamage *= armDamage;
                     }
                 }
                 if ((__instance.bodyPart == PlayerDamageReceiver.BodyPart.ArmLowerRt) || (__instance.bodyPart == PlayerDamageReceiver.BodyPart.ArmUpperRt))
                 {
+                    absoluteDamage *= armDamage;
                     if (tactsuitVr.armsConnected)
                     {
                         tactsuitVr.PlaybackHaptics("Recoil_R");
                         hapticsApplied = true;
-                        absoluteDamage *= armDamage;
                     }
                 }
-
-                if ((!hapticsApplied) && (attack.collider != null))
+                if ((!hapticsApplied))
                 {
-                    var angleShift = getAngleAndShift(__instance.transform, attack.collider.transform.position);
+                    KeyValuePair<float, float> angleShift;
+                    if (attack.collider != null) { angleShift = getAngleAndShift(__instance.transform, attack.collider.transform.position); }
+                    else { angleShift = getAngleAndShift(__instance.transform, attack.direction); }
                     tactsuitVr.PlayBackHit(damagePattern, angleShift.Key, angleShift.Value);
                     absoluteDamage *= bodyDamage;
                 }
@@ -302,6 +303,17 @@ namespace Bonelab_bhaptics
                 if (myRigManager != null)
                     if (__instance._rigManager != myRigManager) return;
                 if (__instance.curr_Health <= 0.3f * __instance.max_Health) tactsuitVr.StartHeartBeat();
+                else tactsuitVr.StopHeartBeat();
+            }
+        }
+
+        [HarmonyPatch(typeof(RigManager), "Update", new Type[] {  })]
+        public class bhaptics_PlayerHealthUpdate2
+        {
+            [HarmonyPostfix]
+            public static void Postfix(RigManager __instance)
+            {
+                if ((__instance.health.curr_Health <= 0.3f * __instance.health.max_Health)&&(__instance.health.curr_Health>0.0f)) tactsuitVr.StartHeartBeat();
                 else tactsuitVr.StopHeartBeat();
             }
         }
